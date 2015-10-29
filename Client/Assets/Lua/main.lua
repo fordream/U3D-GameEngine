@@ -192,7 +192,7 @@ local function loadFrist()
    
 --    checkVerion()
 	 local url = CUtils.GetAssetFullPath(FRIST_VIEW)
-	 print("begin"..url)
+	 warn("begin "..url)
 	 Loader:getResource(url,onLoadComp,false)
 end
 

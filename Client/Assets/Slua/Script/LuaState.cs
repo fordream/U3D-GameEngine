@@ -572,6 +572,9 @@ end
             LuaDLL.lua_pushcfunction(L, print);
             LuaDLL.lua_setglobal(L, "print");
 
+            LuaDLL.lua_pushcfunction(L, warn);
+            LuaDLL.lua_setglobal(L, "warn");
+
             LuaDLL.lua_pushcfunction(L, pcall);
             LuaDLL.lua_setglobal(L, "pcall");
 
@@ -781,9 +784,36 @@ end
 				LuaDLL.lua_pop(L, 1);
 			}
 			LuaDLL.lua_settop(L, n);
-			Debug.Log(s);
+			Debug.Log("[LUA]" + s);
 			return 0;
 		}
+
+        [MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
+        internal static int warn(IntPtr L)
+        {
+            int n = LuaDLL.lua_gettop(L);
+            string s = "";
+
+            LuaDLL.lua_getglobal(L, "tostring");
+
+            for (int i = 1; i <= n; i++)
+            {
+                if (i > 1)
+                {
+                    s += "    ";
+                }
+
+                LuaDLL.lua_pushvalue(L, -1);
+                LuaDLL.lua_pushvalue(L, i);
+
+                LuaDLL.lua_call(L, 1, 1);
+                s += LuaDLL.lua_tostring(L, -1);
+                LuaDLL.lua_pop(L, 1);
+            }
+            LuaDLL.lua_settop(L, n);
+            Debug.LogWarning("[LUA]" + s);
+            return 0;
+        }
 
 		[MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
 		internal static int loadfile(IntPtr L)

@@ -25,7 +25,7 @@ LuaHelper=LuaHelper --LLuaHelper --luanet.import_type("LuaHelper")
 toluaiTween=iTween
 
 -- PLua = luanet.import_type("PLua")
-Net= LNet.instance -- luanet.import_type("LNet").instance
+Net= LNet.main -- luanet.import_type("LNet").instance
 -- Msg=luanet.import_type("Msg")
 Request=LRequest --luanet.import_type("LRequest")
 
