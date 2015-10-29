@@ -36,6 +36,15 @@ namespace SLua
 			add(typeof(List<int>), "ListInt");
 			add(typeof(Dictionary<int, string>), "DictIntStr");
 			add(typeof(string), "String");
+            add(typeof(System.Text.Encoding), "TextEncoding");
+            add(typeof(System.Net.IPEndPoint), "IPEndPoint");
+            add(typeof(System.Net.IPAddress), "IPAddress");
+            add(typeof(System.Net.Sockets.SocketType), "SocketType");
+            add(typeof(System.Net.Sockets.AddressFamily), "AddressFamily");
+            add(typeof(System.Net.Sockets.ProtocolType), "ProtocolType");
+            add(typeof(System.Net.Sockets.SocketFlags), "SocketFlags");
+            //add(typeof(System.Net.Sockets.Socket), "Socket");
+            //add(typeof(Sock), "Sock");
 			// add your custom class here
 			// add( type, typename)
 			// type is what you want to export

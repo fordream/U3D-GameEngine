@@ -236,14 +236,15 @@ namespace SLua
 			{
 				Directory.CreateDirectory(path);
 			}
-			
-			ExportGenericDelegate fun = (Type t, string ns) =>
-			{
-				if (Generate(t, ns, path))
-					exports.Add(t);
-			};
 
             HashSet<string> namespaces = CustomExport.OnAddCustomNamespace();
+
+			ExportGenericDelegate fun = (Type t, string ns) =>
+			{
+                 if (Generate(t, ns, path))
+                      exports.Add(t);
+			};
+
             Assembly assembly;
             Type[] types;
 
@@ -816,7 +817,7 @@ namespace SLua
 		
 		private void WriteFunction(Type t, StreamWriter file, bool writeStatic = false)
 		{
-			BindingFlags bf = BindingFlags.Public | BindingFlags.DeclaredOnly;
+            BindingFlags bf = BindingFlags.Public | BindingFlags.DeclaredOnly ;
 			if (writeStatic)
 				bf |= BindingFlags.Static;
 			else
@@ -836,6 +837,8 @@ namespace SLua
 				
 				if (mi.MemberType == MemberTypes.Method
 				    && !IsObsolete(mi)
+                    && !IsCLSCompliant(mi)
+                    && !IsNotVisible(mi)
 				    && !DontExport(mi)
 				    && !funcname.Contains(fn)
 				    && isUsefullMethod(mi)
@@ -877,6 +880,21 @@ namespace SLua
 		{
 			return t.GetCustomAttributes(typeof(ObsoleteAttribute), false).Length > 0;
 		}
+
+        bool IsCLSCompliant(MemberInfo t)
+        {
+            return t.GetCustomAttributes(typeof(CLSCompliantAttribute), false).Length > 0;
+        }
+
+        bool IsNotVisible(MemberInfo t)
+        {
+            object[] attrs = t.GetCustomAttributes(typeof(System.Runtime.InteropServices.ComVisibleAttribute), false);
+
+            if (attrs.Length == 0)
+                return false;
+            System.Runtime.InteropServices.ComVisibleAttribute attr = attrs[attrs.Length - 1] as System.Runtime.InteropServices.ComVisibleAttribute;
+            return !attr.Value;
+        }
 		
 		void RegFunction(Type t, StreamWriter file)
 		{
@@ -979,7 +997,7 @@ namespace SLua
 			FieldInfo[] fields = t.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 			foreach (FieldInfo fi in fields)
 			{
-				if (DontExport(fi) || IsObsolete(fi))
+                if (DontExport(fi) || IsObsolete(fi) || IsCLSCompliant(fi) || IsNotVisible(fi))
 					continue;
 				
 				PropPair pp = new PropPair();
@@ -1053,7 +1071,7 @@ namespace SLua
 			foreach (PropertyInfo fi in props)
 			{
 				//if (fi.Name == "Item" || IsObsolete(fi) || MemberInFilter(t,fi) || DontExport(fi))
-				if (IsObsolete(fi) || MemberInFilter(t, fi) || DontExport(fi))
+                if (IsObsolete(fi) || MemberInFilter(t, fi) || DontExport(fi) || IsCLSCompliant(fi) || IsNotVisible(fi))
 					continue;
 				if (fi.Name == "Item"
 				    || (t.Name == "String" && fi.Name == "Chars")) // for string[]
@@ -1273,7 +1291,7 @@ namespace SLua
 			ConstructorInfo[] cons = t.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
 			foreach (ConstructorInfo ci in cons)
 			{
-				if (!IsObsolete(ci) && !DontExport(ci) && !ContainUnsafe(ci))
+                if (!IsObsolete(ci) && !DontExport(ci) && !ContainUnsafe(ci) && !IsCLSCompliant(ci) && !IsNotVisible(ci))
 					ret.Add(ci);
 			}
 			return ret.ToArray();
@@ -1500,6 +1518,8 @@ namespace SLua
 			{
 				if (m.MemberType == MemberTypes.Method
 				    && !IsObsolete(m)
+                    && !IsCLSCompliant(m)
+                    && !IsNotVisible(m)
 				    && !DontExport(m)
 				    && isUsefullMethod((MethodInfo)m))
 					methods.Add((MethodBase)m);
@@ -1583,8 +1603,6 @@ namespace SLua
 		}
 		private void WriteFunctionCall(MethodInfo m, StreamWriter file, Type t)
 		{
-			
-			
 			bool hasref = false;
 			ParameterInfo[] pars = m.GetParameters();
 			
@@ -1594,9 +1612,7 @@ namespace SLua
 				WriteCheckSelf(file, t);
 				argIndex++;
 			}
-			
-			
-			
+
 			
 			for (int n = 0; n < pars.Length; n++)
 			{
@@ -1746,7 +1762,7 @@ namespace SLua
 			
 			if (!isout)
 			{
-				if (t.IsEnum)
+				if (t.IsEnum || t.BaseType == typeof(System.Enum))
 					Write(file, "checkEnum(l,{0},out a{1});", n + argstart, n + 1);
 				else if (t.BaseType == typeof(System.MulticastDelegate))
 				{
