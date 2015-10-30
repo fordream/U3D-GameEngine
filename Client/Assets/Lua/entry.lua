@@ -22,17 +22,17 @@ end
 
 local function loadRes(url,cb)
 	local c = coroutine.create(function()
-        -- Yield(WaitForSeconds(2))
-        -- print "coroutine WaitForSeconds 2"
         print("loadRes url=",url)
         local www = WWW(url)
         Yield(www)
         local noerror = not www.error or #(www.error) == 0
 		local success = www.isDone and noerror
         if success then
-            warn(www.bytes)
-            warn(www.assetBundle,www.assetBundle:LoadAllAssets(UnityEngine.GameObject))
-        	if cb then cb(www.assetBundle.mainAsset) end
+            warn(www.assetBundle:GetAllAssetNames())
+            for k,v in pairs(www.assetBundle:GetAllAssetNames()) do
+                print(k,v)
+            end
+        	if cb then cb(www.assetBundle:LoadAllAssets()[1]) end
         	www.assetBundle:Unload(false)
         end
 
@@ -56,7 +56,7 @@ local function main()
 
 	local url = CUtils.GetAssetFullPath("UILogin.u3d")
 
-	--[[loadRes(url,function (obj)
+	loadRes(url,function (obj)
 		local loginView = LuaHelper.Instantiate(obj)--Object.Instantiate("UILogin")
     	loginView:SetActive(true)
     	loginView.name = "UILogin"
@@ -64,17 +64,7 @@ local function main()
     	loginView.transform:SetParent(uiRoot.transform);
         loginView.transform.localPosition = Vector3(0, 0, 0);
         loginView.transform.localScale = Vector3(1, 1, 1);
-	end)]]
-    
-    loadRes2(url,function (obj)
-        local loginView = LuaHelper.Instantiate(obj)--Object.Instantiate("UILogin")
-        loginView:SetActive(true)
-        loginView.name = "UILogin"
-        loginView.transform:SetParent(uiRoot.transform);
-        loginView.transform.localPosition = Vector3(0, 0, 0);
-        loginView.transform.localScale = Vector3(1, 1, 1);
-    end)
-    
+	end)
 end
 
 main()

@@ -104,7 +104,8 @@ UnityEngine.Yield = uCoroutine.yield
                 yield return mb.StartCoroutine((IEnumerator)y);
             else
                 yield return y;
-            f.call();
+            if(null != f)
+                f.call();
 		}
 
 	}
