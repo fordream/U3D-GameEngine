@@ -27,5 +27,5 @@ AssetBundleManifest:
       Name: dfphaibaow12gbfont.u3d
       Dependencies: {}
     Info_6:
-      Name: uilogin.u3d
+      Name: uilogin.u3d.login
       Dependencies: {}

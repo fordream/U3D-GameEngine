@@ -30,11 +30,25 @@ local function loadRes(url,cb)
         local noerror = not www.error or #(www.error) == 0
 		local success = www.isDone and noerror
         if success then
+            warn(www.bytes)
+            warn(www.assetBundle,www.assetBundle:LoadAllAssets(UnityEngine.GameObject))
         	if cb then cb(www.assetBundle.mainAsset) end
         	www.assetBundle:Unload(false)
         end
+
+        www:Dispose()
     end)
     coroutine.resume(c)
+end
+
+local function loadRes2(url,cb)
+    local req = LRequest(url)
+    req.onCompleteFn = function(r)
+        warn("finished",r.data,r.assetBundle.mainAsset)
+        if cb then cb(r.data) end
+        r.assetBundle:Unload(false)
+    end
+    LHighway.instance:LoadReq(req)
 end
 
 local function main()
@@ -42,7 +56,7 @@ local function main()
 
 	local url = CUtils.GetAssetFullPath("UILogin.u3d")
 
-	loadRes(url,function (obj)
+	--[[loadRes(url,function (obj)
 		local loginView = LuaHelper.Instantiate(obj)--Object.Instantiate("UILogin")
     	loginView:SetActive(true)
     	loginView.name = "UILogin"
@@ -50,21 +64,17 @@ local function main()
     	loginView.transform:SetParent(uiRoot.transform);
         loginView.transform.localPosition = Vector3(0, 0, 0);
         loginView.transform.localScale = Vector3(1, 1, 1);
-	end)
-
-    --[[local req = LRequest(url)
-    req.onCompleteFn = function(r)
-    	warn("finished",r.data,r.assetBundle.mainAsset)
-    	local loginView = LuaHelper.Instantiate(r.data)--Object.Instantiate("UILogin")
-    	r.assetBundle:Unload(false)
-    	loginView:SetActive(true)
-    	loginView.name = "UILogin"
-
-    	loginView.transform:SetParent(uiRoot.transform);
+	end)]]
+    
+    loadRes2(url,function (obj)
+        local loginView = LuaHelper.Instantiate(obj)--Object.Instantiate("UILogin")
+        loginView:SetActive(true)
+        loginView.name = "UILogin"
+        loginView.transform:SetParent(uiRoot.transform);
         loginView.transform.localPosition = Vector3(0, 0, 0);
         loginView.transform.localScale = Vector3(1, 1, 1);
-	end
-	LHighway.instance:LoadReq(req)]]
+    end)
+    
 end
 
 main()
