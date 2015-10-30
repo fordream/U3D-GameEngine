@@ -1,0 +1,41 @@
+ManifestFileVersion: 0
+CRC: 3827844337
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: b67ace2ca304f0b2144f625c84efcec0
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 00ffc586b3c4c12c72c7fed589b81235
+HashAppended: 0
+ClassTypes:
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 213
+  Script: {instanceID: 0}
+Assets:
+- Assets/CustomerResource/Export/Tetris/Atlas/eluosi_lan.png
+- Assets/CustomerResource/Export/Tetris/Atlas/eluosi_daojishi.png
+- Assets/CustomerResource/Export/Tetris/Atlas/eluosi_zi.png
+- Assets/CustomerResource/Export/Tetris/Atlas/red.jpg
+- Assets/CustomerResource/Export/Tetris/Atlas/eluosi_jiantou.png
+- Assets/CustomerResource/Export/Tetris/Atlas/eluosi_qing.png
+- Assets/CustomerResource/Export/Tetris/Atlas/eluosi_box2.png
+- Assets/CustomerResource/Export/Tetris/Atlas/lianliankan_beijing.png
+- Assets/CustomerResource/Export/Tetris/Atlas/blue.png
+- Assets/CustomerResource/Export/Tetris/Atlas/yellow.png
+- Assets/CustomerResource/Export/Tetris/Atlas/eluosi_box1.png
+- Assets/CustomerResource/Export/Tetris/Atlas/eluosi_lv.png
+- Assets/CustomerResource/Export/Tetris/Atlas/eluosi_huang.png
+- Assets/CustomerResource/Export/Tetris/Atlas/eluosi_box3.png
+- Assets/CustomerResource/Export/Tetris/Atlas/2.png
+- Assets/CustomerResource/Export/Tetris/Atlas/eluosi_xuanzhuan.png
+- Assets/CustomerResource/Export/Tetris/Atlas/button_btn04_2.png
+- Assets/CustomerResource/Export/Tetris/Atlas/button_btn05_1.png
+- Assets/CustomerResource/Export/Tetris/Atlas/eluosi_cheng.png
+- Assets/CustomerResource/Export/Tetris/Atlas/ui_1.png
+- Assets/CustomerResource/Export/Tetris/Atlas/green.jpg
+- Assets/CustomerResource/Export/Tetris/Atlas/eluosi_box4.png
+- Assets/CustomerResource/Export/Tetris/Atlas/eluosi_hong.png
+- Assets/CustomerResource/Export/Tetris/Atlas/button_back2.png
+Dependencies: []

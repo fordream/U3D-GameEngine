@@ -1,0 +1,22 @@
+ManifestFileVersion: 0
+CRC: 123107499
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: e102fb3882d8b206d2533e08d3cb52f0
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: dc8eb627370cc368636e11317bbd7340
+HashAppended: 0
+ClassTypes:
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 128
+  Script: {instanceID: 0}
+Assets:
+- Assets/CustomerResource/Source/Font/DFPHaiBaoW12GBFont.ttf
+Dependencies: []
