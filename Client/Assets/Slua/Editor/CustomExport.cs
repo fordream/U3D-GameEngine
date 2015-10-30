@@ -24,6 +24,7 @@ namespace SLua
 {
 	using System.Collections.Generic;
 	using System;
+    using System.IO;
 
 	public class CustomExport
 	{
@@ -36,6 +37,9 @@ namespace SLua
 			add(typeof(List<int>), "ListInt");
 			add(typeof(Dictionary<int, string>), "DictIntStr");
 			add(typeof(string), "String");
+            add(typeof(MemoryStream), "MemoryStream");
+            add(typeof(BinaryReader), "BinaryReader");
+            add(typeof(BinaryWriter), "BinaryWriter");
             add(typeof(System.Text.Encoding), "TextEncoding");
             add(typeof(System.Net.IPEndPoint), "IPEndPoint");
             add(typeof(System.Net.IPAddress), "IPAddress");
@@ -44,12 +48,18 @@ namespace SLua
             add(typeof(System.Net.Sockets.ProtocolType), "ProtocolType");
             add(typeof(System.Net.Sockets.SocketFlags), "SocketFlags");
             //add(typeof(System.Net.Sockets.Socket), "Socket");
-            //add(typeof(Sock), "Sock");
+           
 			// add your custom class here
 			// add( type, typename)
 			// type is what you want to export
 			// typename used for simplify generic type name or rename, like List<int> named to "ListInt", if not a generic type keep typename as null or rename as new type name
 		}
+
+        public static void OnAddCustomMethod(LuaCodeGen.ExportGenericMethod add)
+        {
+            add(typeof(CustomMethod_BinaryWriter), typeof(BinaryWriter));
+            add(typeof(CustomMethod_BinaryReader), typeof(BinaryReader));
+        }
 
 		public static void OnAddCustomAssembly(ref List<string> list)
 		{

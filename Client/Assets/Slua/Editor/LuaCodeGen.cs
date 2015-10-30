@@ -93,7 +93,9 @@ namespace SLua
 	{
         public const string Path = "Assets/Slua/LuaObject/";
         public delegate void ExportGenericDelegate(Type t, string ns);
-		
+        public delegate void ExportGenericMethod(Type custom,Type t);
+        static Dictionary<Type, Type> customMethod = new Dictionary<Type, Type>();
+
         static bool autoRefresh = true;
 
         static bool IsCompiling {
@@ -122,6 +124,12 @@ namespace SLua
 		[MenuItem("SLua/All/Make")]
 		static public void GenerateAll()
 		{
+            customMethod.Clear();
+            ExportGenericMethod customfun = (Type custom, Type t) =>
+            {
+                customMethod.Add(t, custom);
+            };
+            CustomExport.OnAddCustomMethod(customfun);
             autoRefresh = false;
             Generate();
 			GenerateUI();
@@ -236,6 +244,13 @@ namespace SLua
 			{
 				Directory.CreateDirectory(path);
 			}
+
+            customMethod.Clear();
+            ExportGenericMethod customfun = (Type custom, Type t) =>
+            {
+                customMethod.Add(t, custom);
+            };
+            CustomExport.OnAddCustomMethod(customfun);
 
             HashSet<string> namespaces = CustomExport.OnAddCustomNamespace();
 
@@ -370,6 +385,7 @@ namespace SLua
 			CodeGenerator cg = new CodeGenerator();
 			cg.givenNamespace = ns;
             cg.path = path;
+            cg.customMethod = customMethod;
 			return cg.Generate(t);
 		}
 		
@@ -428,6 +444,7 @@ namespace SLua
 		
 		public string givenNamespace;
         public string path;
+        public Dictionary<Type, Type> customMethod;
 		
 		class PropPair
 		{
@@ -521,6 +538,7 @@ namespace SLua
 					WriteConstructor(t, file);
 					WriteFunction(t, file);
 					WriteFunction(t, file, true);
+                    WriteCustomMethod(t, file);
 					WriteField(t, file);
 					RegFunction(t, file);
 					End(file);
@@ -850,7 +868,43 @@ namespace SLua
 				}
 			}
 		}
-		
+
+        private void WriteCustomMethod(Type t, StreamWriter file)
+        {
+            if (null == customMethod || !customMethod.ContainsKey(t))
+                return;
+
+            Type customType = customMethod[t];
+            BindingFlags bf = BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.Static;
+
+            MethodInfo[] members = customType.GetMethods(bf);
+            foreach (MethodInfo mi in members)
+            {
+                //bool instanceFunc;
+                //if (isPInvoke(mi, out instanceFunc))
+                //{
+                //    directfunc.Add(t.FullName + "." + mi.Name, instanceFunc);
+                //    continue;
+                //}
+
+                string fn = staticName(mi.Name);
+
+                if (mi.MemberType == MemberTypes.Method
+                    && !IsObsolete(mi)
+                    && !IsCLSCompliant(mi)
+                    && !IsNotVisible(mi)
+                    && !DontExport(mi)
+                    && !funcname.Contains(fn)
+                    && isUsefullMethod(mi)
+                    && !MemberInFilter(t, mi))
+                {
+                    WriteFunctionDec(file, fn);
+                    WriteFunctionImpl(file, mi, customType, bf);
+                    funcname.Add(fn);
+                }
+            }
+        }
+
 		bool isPInvoke(MethodInfo mi, out bool instanceFunc)
 		{
 			object[] attrs = mi.GetCustomAttributes(typeof(MonoPInvokeCallbackAttribute), false);
@@ -1342,7 +1396,7 @@ namespace SLua
 					{
 						ParameterInfo p = pars[k];
 						bool hasParams = p.GetCustomAttributes(typeof(ParamArrayAttribute), false).Length > 0;
-						CheckArgument(file, p.ParameterType, k, 2, p.IsOut, hasParams);
+						CheckArgument(file, p.ParameterType, k, 2, p, hasParams);
 					}
 					Write(file, "o=new {0}({1});", TypeDecl(t), FuncCall(ci));
 					WriteOk(file);
@@ -1624,7 +1678,7 @@ namespace SLua
 				}
 				
 				bool hasParams = p.GetCustomAttributes(typeof(ParamArrayAttribute), false).Length > 0;
-				CheckArgument(file, p.ParameterType, n, argIndex, p.IsOut, hasParams);
+				CheckArgument(file, p.ParameterType, n, argIndex, p, hasParams);
 			}
 			
 			string ret = "";
@@ -1756,11 +1810,11 @@ namespace SLua
 			if (fmt.EndsWith("{")) indent++;
 		}
 		
-		private void CheckArgument(StreamWriter file, Type t, int n, int argstart, bool isout, bool isparams)
+		private void CheckArgument(StreamWriter file, Type t, int n, int argstart, ParameterInfo p, bool isparams)
 		{
 			Write(file, "{0} a{1};", TypeDecl(t), n + 1);
 			
-			if (!isout)
+			if (!p.IsOut || p.IsIn)
 			{
 				if (t.IsEnum || t.BaseType == typeof(System.Enum))
 					Write(file, "checkEnum(l,{0},out a{1});", n + argstart, n + 1);
