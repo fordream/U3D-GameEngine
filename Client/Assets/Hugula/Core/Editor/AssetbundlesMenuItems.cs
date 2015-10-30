@@ -32,6 +32,12 @@ public class AssetbundlesMenuItems
         }
     }
 
+    [MenuItem("Assets/AssetBundles/ExportResource", false, 1)]
+    static public void ExportResource()
+    {
+        BuildScript.ExportResource();
+    }
+
     #endregion
 
     #region lua language config export

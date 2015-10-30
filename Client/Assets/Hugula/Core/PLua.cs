@@ -56,7 +56,7 @@ public class PLua : MonoBehaviour
     void Start()
     {
         lua.init(null, () =>
-        { LoadBundle(true); });
+        { LoadBundle(true); }, isDebug);
     }
 
     void Update()

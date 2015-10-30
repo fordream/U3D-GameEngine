@@ -196,6 +196,7 @@ public class TcpServer : MonoBehaviour
         if (sessions.ContainsKey(SensionId))
         {
             Session delses = (Session)sessions[SensionId];
+            Debug.Log("client" + SensionId + " ManagedThreadId " + System.Threading.Thread.CurrentThread.ManagedThreadId + "closed");
             if (onClientCloseFn != null)
                 onClientCloseFn.call(delses);
 
@@ -291,7 +292,8 @@ public class TcpServer : MonoBehaviour
     {
         //本机IP
         IPAddress localIP = GetLocalIP();
-        Debug.Log(localIP.ToString() + " is Start  ManagedThreadId " + System.Threading.Thread.CurrentThread.ManagedThreadId);
+        IPEndPoint ip = new IPEndPoint(localIP, port);
+        Debug.Log(ip.ToString() + " is Start  ManagedThreadId " + System.Threading.Thread.CurrentThread.ManagedThreadId);
         if (localIP != null)
         {
             bool useNat = !Network.HavePublicAddress();
@@ -312,6 +314,8 @@ public class TcpServer : MonoBehaviour
             sessions[hashCode] = ses;//.Add(ses);
             newClients.Add(ses);
             Debug.Log("new client" + client.GetHashCode() + " ManagedThreadId " + System.Threading.Thread.CurrentThread.ManagedThreadId);
+
+            ses.Send(Convert.FromBase64String("Hello"));
         }
         server.BeginAcceptTcpClient(DoAcceptTcpClientCallback, server); //开始监听
     }

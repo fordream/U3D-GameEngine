@@ -40,6 +40,16 @@ public class BuildScript
         BuildPipeline.BuildAssetBundles(GetOutPutPath(target), optionsDefault, target);
     }
 
+    public static void ExportResource()
+    {
+        string path = EditorUtility.SaveFilePanel("Save Resource", "", "New Resource", "u3d");
+        if (path.Length == 0)
+            return;
+        Object[] selection = Selection.GetFiltered(typeof(Object), SelectionMode.DeepAssets);
+        BuildPipeline.BuildAssetBundle(Selection.activeObject, selection, path, BuildAssetBundleOptions.CollectDependencies | BuildAssetBundleOptions.CompleteAssets);
+        Selection.objects = selection;
+    }
+
     #region 
     /// <summary>
     /// 检查输出目标

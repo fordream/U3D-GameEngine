@@ -100,11 +100,18 @@ UnityEngine.Yield = uCoroutine.yield
 
 		static public IEnumerator yieldReturn(object y, LuaFunction f)
 		{
-			if (y is IEnumerator)
-				yield return mb.StartCoroutine((IEnumerator)y);
-			else
-				yield return y;
-			f.call();
+            try
+            {
+                if (y is IEnumerator)
+                    yield return mb.StartCoroutine((IEnumerator)y);
+                else
+                    yield return y;
+                f.call();
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(e.Message);
+            }
 		}
 
 	}

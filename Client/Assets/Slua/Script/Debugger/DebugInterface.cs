@@ -210,7 +210,7 @@ watch local/up value  			watch
 #if LuaDebugger
 			try
 			{
-				IPEndPoint localEP = new IPEndPoint(IPAddress.Parse("0.0.0.0"), DebugPort);
+				IPEndPoint localEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), DebugPort);
 				server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 				server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 				server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
@@ -262,7 +262,7 @@ watch local/up value  			watch
 				{
 					string str = System.Text.Encoding.UTF8.GetString(recvBuffer, 0, len);
 					str=str.Trim();
-
+                    Debug.Log("Receive:" + str);
 					try
 					{
 						if(doCommand(str))
@@ -367,7 +367,7 @@ watch local/up value  			watch
 
 			debugMode = false;
 
-			Debug.Log("New debug session connected");
+			Debug.Log("New debug session connected:"+client.LocalEndPoint);
 		}
 
 		public void close()

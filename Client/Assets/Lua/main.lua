@@ -194,7 +194,49 @@ local function loadFrist()
 	 local url = CUtils.GetAssetFullPath(FRIST_VIEW)
 	 warn("begin "..url)
 	 Loader:getResource(url,onLoadComp,false)
+
+	 warn("Encoding",TextEncoding.UTF8.EncodingName)
 end
 
 
-loadFrist()
+--loadFrist()
+
+local ip = IPAddress.Parse("0.0.0.0")
+local localEP = IPEndPoint(ip,10241)
+local serverSocket
+local function onClientConnect(sock)
+	warn("sock",sock)
+end
+local function onReceiveMessage(sock,br)
+	warn("read",sock,br)
+end
+local function onUpdate()
+	--warn("aaaaaaaaa")
+	--onClientConnect()
+end
+local function onDestroy()
+	--serverSocket:Shutdown(2);
+	serverSocket:Close();
+	warn("serverSocket Closed")
+end
+local function testConnect()
+	warn("Connect",localEP)
+    local clientSocket = Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+    clientSocket:Connect(localEP)
+end
+
+
+local function testSocket()
+	serverSocket = Sock.Instance()
+	serverSocket:SetSock(AddressFamily.InterNetwork,SocketType.Stream,ProtocolType.Tcp)
+	serverSocket:Bind(localEP)
+	serverSocket:Listen(10)
+	serverSocket.onReceiveMessage = onReceiveMessage
+	serverSocket:BeginAccept(onClientConnect,serverSocket)
+	warn("server Listen:",localEP)
+
+	--PLua.Delay(testConnect,2)
+end
+
+testSocket()
+

@@ -2,6 +2,8 @@
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
 using System.Collections;
+using System.Text;
+using System;
 
 public class ClientTest : MonoBehaviour {
 
@@ -53,15 +55,20 @@ public class ClientTest : MonoBehaviour {
             GUILayout.BeginVertical();
             if (!LNet.main.IsConnected && GUILayout.Button("Connect"))
             {
-                LNet.main.Connect("127.0.0.1", 12000);
+                LNet.main.Connect("127.0.0.1", 10240);
             }
             if (LNet.main.IsConnected && GUILayout.Button("send msg Server"))
             {
-                Msg m = new Msg();
-                m.Type = 2;
-                m.WriteString("hello server "+System.DateTime.Now.ToShortTimeString());
-                LNet.main.Send(m);
-                //Debug.Log("send:" + Msg.Debug(m.ToCArray()));
+               // Msg m = new Msg();
+                //m.Type = 2;
+               // m.WriteString("hello server "+System.DateTime.Now.ToShortTimeString());
+               // LNet.main.Send(m);
+               // Debug.Log("send:" + Msg.Debug(m.ToCArray()));
+                UTF8Encoding utf8Encoding = new UTF8Encoding();
+                int byteCount = utf8Encoding.GetByteCount("hello server");
+                byte[] buffer = utf8Encoding.GetBytes("hello server");
+                LNet.main.Send(BitConverter.GetBytes(byteCount));
+                LNet.main.Send(buffer);
             }
             GUILayout.EndVertical();
           
