@@ -50,6 +50,21 @@ public class BuildScript
         Selection.objects = selection;
     }
 
+    public static void SetAssetBundleName()
+    {
+        Object[] selection = Selection.objects;
+
+        AssetImporter import = null;
+        foreach (Object s in selection)
+        {
+            import = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(s));
+            import.name = s.name;
+            import.assetBundleName = s.name + "." + Common.ASSETBUNDLE_SUFFIX;
+            Debug.Log("SetAssetBundlesName:" + import.name);
+            Debug.Log("SetAssetBundlesName:" + import.assetBundleName);
+        }
+    }
+
     #region 
     /// <summary>
     /// 检查输出目标

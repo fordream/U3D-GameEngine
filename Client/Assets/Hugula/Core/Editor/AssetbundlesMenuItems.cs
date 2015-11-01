@@ -21,15 +21,7 @@ public class AssetbundlesMenuItems
     [MenuItem("Assets/AssetBundles/Set AssetBundle Name", false, 1)]
     static public void SetAssetBundlesName()
     {
-        Object[] selection = Selection.objects;
-
-        AssetImporter import = null;
-        foreach (Object s in selection)
-        {
-            import = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(s));
-            import.assetBundleName = s.name+"."+Common.ASSETBUNDLE_SUFFIX;
-            Debug.Log(import.name);
-        }
+        BuildScript.SetAssetBundleName();
     }
 
     [MenuItem("Assets/AssetBundles/ExportResource", false, 1)]
@@ -70,6 +62,13 @@ public class AssetbundlesMenuItems
     {
         ExportResources.exportPublish();
     }
+
+    [MenuItem("Hugula/clear all ", false, 16)]
+    public static void clearAll()
+    {
+        ExportResources.clearAll();
+    }
+
     #endregion
 
     #region 加密

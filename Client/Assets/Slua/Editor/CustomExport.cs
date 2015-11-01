@@ -59,6 +59,8 @@ namespace SLua
         {
             add(typeof(CustomMethod_BinaryWriter), typeof(BinaryWriter));
             add(typeof(CustomMethod_BinaryReader), typeof(BinaryReader));
+            add(typeof(CustomMethod_GameObject), typeof(UnityEngine.GameObject));
+            add(typeof(CustomMethod_UnityEngineObject), typeof(UnityEngine.Object));
         }
 
 		public static void OnAddCustomAssembly(ref List<string> list)

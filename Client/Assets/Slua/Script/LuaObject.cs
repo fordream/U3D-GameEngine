@@ -154,7 +154,9 @@ return index
 			addMember(l, ToString);
 			addMember(l, GetHashCode);
 			addMember(l, Equals);
-			addMember (l, GetType);
+			addMember(l, GetType);
+            addMember(l, IsNil);
+            addMember(l, "isNil", get_isNil, null, true);
 			LuaDLL.lua_setfield(l, LuaIndexes.LUA_REGISTRYINDEX, "__luabaseobject");
 
 			LuaVarObject.init(l);
@@ -230,6 +232,46 @@ return index
 				return error(l, e);
 			}
 		}
+
+        [MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
+        static public int get_isNil(IntPtr l)
+        {
+            return IsNil(l);
+        }
+
+        [MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
+        static public int IsNil(IntPtr l)
+        {
+            try
+            {
+                LuaTypes t = LuaDLL.lua_type(l, 1);
+                pushValue(l, true);
+
+                if (t == LuaTypes.LUA_TNIL)
+                {
+                    pushValue(l, true);
+                }
+                // LUA_TUSERDATA or LUA_TTABLE(Class inherited from Unity Native)
+                else if (t == LuaTypes.LUA_TUSERDATA || isLuaClass(l, 1))
+                {
+                    object o = checkObj(l, 1);
+                    if (o is UnityEngine.Object)
+                    {
+                        pushValue(l, (o as UnityEngine.Object) == null);
+                    }
+                    else
+                        pushValue(l, o == null);
+                }
+                else
+                    pushValue(l, false);
+
+                return 2;
+            }
+            catch (Exception e)
+            {
+                return error(l, e);
+            }
+        }
 
 		static void setupPushVar()
 		{

@@ -869,6 +869,26 @@ namespace SLua
 			}
 		}
 
+        bool IsMethodWrited(MethodInfo[] cons, MethodInfo mi)
+        {
+            try
+            {
+                for (int i = 0; i < cons.Length; i++)
+                {
+                    MethodInfo m = cons[i];
+                    if (mi.Name.Equals(m.Name) && (isStaticCustomMethod(mi) || (!isStaticCustomMethod(mi) && !m.IsStatic)))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+        }
+
         private void WriteCustomMethod(Type t, StreamWriter file)
         {
             if (null == customMethod || !customMethod.ContainsKey(t))
@@ -876,6 +896,7 @@ namespace SLua
 
             Type customType = customMethod[t];
             BindingFlags bf = BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.Static;
+            MethodInfo[] cons = t.GetMethods();
 
             MethodInfo[] members = customType.GetMethods(bf);
             foreach (MethodInfo mi in members)
@@ -886,8 +907,11 @@ namespace SLua
                 //    directfunc.Add(t.FullName + "." + mi.Name, instanceFunc);
                 //    continue;
                 //}
+                if (IsMethodWrited(cons, mi))
+                    continue;
 
-                string fn = staticName(mi.Name);
+
+                string fn = isStaticCustomMethod(mi) ? staticName(mi.Name) : mi.Name;
 
                 if (mi.MemberType == MemberTypes.Method
                     && !IsObsolete(mi)
@@ -1584,48 +1608,164 @@ namespace SLua
            });
 			return methods.ToArray();
 		}
-		
+
+        bool isInCustomMethod(Type t, MethodInfo m)
+        {
+            if (null == customMethod || !customMethod.ContainsKey(t))
+                return false;
+
+            Type customType = customMethod[t];
+            BindingFlags bf = BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.Static;
+
+            MethodInfo[] members = customType.GetMethods(bf);
+            foreach (MethodInfo mi in members)
+            {
+                string mi_name = mi.Name;
+                if (mi_name.Equals(m.Name) && (isStaticCustomMethod(mi) || (!isStaticCustomMethod(mi) && !m.IsStatic)))
+                    return true;
+
+            }
+            return false;
+        }
+
+        bool isCustomMethod(MemberInfo m)
+        {
+            object[] attrs = m.GetCustomAttributes(typeof(CustomMethodAttribute), false);
+            return attrs.Length > 0;
+        }
+
+        bool isStaticCustomMethod(MemberInfo m)
+        {
+            object[] attrs = m.GetCustomAttributes(typeof(CustomMethodAttribute), false);
+            return attrs.Length > 0 && (attrs[0] as CustomMethodAttribute).IsStatic;
+        }
+
+        void WriteFunctionImplInner(StreamWriter file, MethodBase[] cons, Type t, BindingFlags bf)
+        {
+            Write(file, "int argc = LuaDLL.lua_gettop(l);");
+
+            bool first = true;
+            for (int n = 0; n < cons.Length; n++)
+            {
+                if (cons[n].MemberType == MemberTypes.Method)
+                {
+                    MethodInfo mi = cons[n] as MethodInfo;
+
+                    ParameterInfo[] pars = mi.GetParameters();
+                    if (isUsefullMethod(mi)
+                        && !mi.ReturnType.ContainsGenericParameters
+                        /*&& !ContainGeneric(pars)*/) // don't support generic method
+                    {
+                        if (isUniqueArgsCount(cons, mi))
+                            Write(file, "{0}(argc=={1}){{", first ? "if" : "else if", mi.IsStatic ? mi.GetParameters().Length : mi.GetParameters().Length + 1);
+                        else
+                            Write(file, "{0}(matchType(l,argc,{1}{2})){{", first ? "if" : "else if", mi.IsStatic ? 1 : 2, TypeDecl(pars));
+                        WriteFunctionCall(mi, file, t);
+                        Write(file, "}");
+                        first = false;
+                    }
+                }
+            }
+            WriteError(file, "No matched override function to call");
+        }
+
 		void WriteFunctionImpl(StreamWriter file, MethodInfo m, Type t, BindingFlags bf)
 		{
 			WriteTry(file);
-			MethodBase[] cons = GetMethods(t, m.Name, bf);
-			if (cons.Length == 1) // no override function
-			{
-				if (isUsefullMethod(m) && !m.ReturnType.ContainsGenericParameters && !m.ContainsGenericParameters) // don't support generic method
-					WriteFunctionCall(m, file, t);
-				else
-				{
-					WriteError(file, "No matched override function to call");
-				}
-			}
-			else // 2 or more override function
-			{
-				Write(file, "int argc = LuaDLL.lua_gettop(l);");
-				
-				bool first = true;
-				for (int n = 0; n < cons.Length; n++)
-				{
-					if (cons[n].MemberType == MemberTypes.Method)
-					{
-						MethodInfo mi = cons[n] as MethodInfo;
-						
-						ParameterInfo[] pars = mi.GetParameters();
-						if (isUsefullMethod(mi)
-						    && !mi.ReturnType.ContainsGenericParameters
-						    /*&& !ContainGeneric(pars)*/) // don't support generic method
-						{
-							if (isUniqueArgsCount(cons, mi))
-								Write(file, "{0}(argc=={1}){{", first ? "if" : "else if", mi.IsStatic ? mi.GetParameters().Length : mi.GetParameters().Length + 1);
-							else
-								Write(file, "{0}(matchType(l,argc,{1}{2})){{", first ? "if" : "else if", mi.IsStatic ? 1 : 2, TypeDecl(pars));
-							WriteFunctionCall(mi, file, t);
-							Write(file, "}");
-							first = false;
-						}
-					}
-				}
-				WriteError(file, "No matched override function to call");
-			}
+            if (!isInCustomMethod(t, m))
+            {
+                MethodBase[] cons = GetMethods(t, m.Name, bf);
+                if (cons.Length == 1) // no override function
+                {
+                    if (isUsefullMethod(m) && !m.ReturnType.ContainsGenericParameters && !m.ContainsGenericParameters) // don't support generic method
+                        WriteFunctionCall(m, file, t);
+                    else
+                    {
+                        WriteError(file, "No matched override function to call");
+                    }
+                }
+                else // 2 or more override function
+                {
+                    WriteFunctionImplInner(file, cons, t, bf);
+                }
+            }
+            else
+            {
+                MethodBase[] cons = GetMethods(t, m.Name, bf);
+                MethodBase[] extends = GetMethods(customMethod[t], m.Name, bf | BindingFlags.Static);
+                Write(file, "int argc = LuaDLL.lua_gettop(l);");
+
+                bool first = true;
+                for (int n = 0; n < cons.Length; n++)
+                {
+                    if (cons[n].MemberType == MemberTypes.Method)
+                    {
+                        MethodInfo mi = cons[n] as MethodInfo;
+
+                        ParameterInfo[] pars = mi.GetParameters();
+                        if (isUsefullMethod(mi)
+                            && !mi.ReturnType.ContainsGenericParameters
+                            /*&& !ContainGeneric(pars)*/) // don't support generic method
+                        {
+                            if (isUniqueArgsCountEx(cons,extends, mi))
+                                Write(file, "{0}(argc=={1}){{", first ? "if" : "else if", mi.IsStatic ? mi.GetParameters().Length : mi.GetParameters().Length + 1);
+                            else
+                                Write(file, "{0}(matchType(l,argc,{1}{2})){{", first ? "if" : "else if", mi.IsStatic ? 1 : 2, TypeDecl(pars));
+                            WriteFunctionCall(mi, file, t);
+                            Write(file, "}");
+                            first = false;
+                        }
+                    }
+                }
+                for (int n = 0; n < extends.Length; n++)
+                {
+                    if (extends[n].MemberType == MemberTypes.Method)
+                    {
+                        MethodInfo mi = extends[n] as MethodInfo;
+
+                        if (isStaticCustomMethod(mi))
+                        {
+                            ParameterInfo[] pars = mi.GetParameters();
+                            if (isUsefullMethod(mi)
+                                && !mi.ReturnType.ContainsGenericParameters
+                                /*&& !ContainGeneric(pars)*/) // don't support generic method
+                            {
+                                if (isUniqueArgsCountEx(cons, extends,mi))
+                                    Write(file, "{0}(argc=={1}){{", first ? "if" : "else if", true ? mi.GetParameters().Length : mi.GetParameters().Length + 1);
+                                else
+                                    Write(file, "{0}(matchType(l,argc,{1}{2})){{", first ? "if" : "else if", true ? 1 : 2, TypeDecl(pars));
+                                WriteFunctionCall(mi, file, customMethod[t]);
+                                Write(file, "}");
+                                first = false;
+                            }
+                        }
+                        else
+                        {
+                            ParameterInfo[] pars = mi.GetParameters();
+                            ParameterInfo self = pars[0];
+                            ParameterInfo[] pars_real = new ParameterInfo[pars.Length-1];
+                            for (int i = 1; i < pars.Length; i++)
+                            {
+                                pars_real[i - 1] = pars[i];
+                            }
+                            if (isUsefullMethod(mi)
+                                && !mi.ReturnType.ContainsGenericParameters
+                                /*&& !ContainGeneric(pars)*/) // don't support generic method
+                            {
+                                if (isUniqueArgsCountEx(cons, extends, mi))
+                                    Write(file, "{0}(argc=={1}){{", first ? "if" : "else if", false ? mi.GetParameters().Length : mi.GetParameters().Length + 1 );
+                                else
+                                    Write(file, "{0}(matchType(l,argc,{1}{2})){{", first ? "if" : "else if", false ? 1 : 2, TypeDecl(pars_real));
+                                WriteFunctionCall(mi, file, customMethod[t]);
+                                Write(file, "}");
+                                first = false;
+                            }
+                        }
+                    }
+                }
+                WriteError(file, "No matched override function to call");
+            }
+
 			WriteCatchExecption(file);
 			Write(file, "}");
 		}
@@ -1640,6 +1780,60 @@ namespace SLua
 			}
 			return true;
 		}
+
+        bool isUniqueArgsCountEx(MethodBase[] cons, MethodBase[] extends, MethodBase mi)
+        {
+            if (!isCustomMethod(mi))
+            {
+                foreach (MethodBase member in cons)
+                {
+                    MethodBase m = (MethodBase)member;
+                    if (m != mi && mi.GetParameters().Length == m.GetParameters().Length)
+                        return false;
+                }
+
+                foreach (MethodBase member in extends)
+                {
+                    MethodBase m = (MethodBase)member;
+                    if (isStaticCustomMethod(m))
+                    {
+                        if (m != mi && mi.GetParameters().Length == m.GetParameters().Length)
+                            return false;
+                    }
+                    else
+                    {
+                        if (m != mi && mi.GetParameters().Length == m.GetParameters().Length - 1)
+                            return false;
+                    }
+                }
+            }
+            else
+            {
+                foreach (MethodBase member in cons)
+                {
+                    MethodBase m = (MethodBase)member;
+                    if (isStaticCustomMethod(mi))
+                    {
+                        if (m != mi && mi.GetParameters().Length == m.GetParameters().Length)
+                            return false;
+                    }
+                    else
+                    {
+                        if (m != mi && mi.GetParameters().Length - 1 == m.GetParameters().Length)
+                            return false;
+                    }
+
+                }
+                foreach (MethodBase member in extends)
+                {
+                    MethodBase m = (MethodBase)member;
+                    if (m != mi && mi.GetParameters().Length == m.GetParameters().Length)
+                        return false;
+                }
+            }
+            
+            return true;
+        }
 		
 		
 		void WriteCheckSelf(StreamWriter file, Type t)
@@ -1657,6 +1851,7 @@ namespace SLua
 		}
 		private void WriteFunctionCall(MethodInfo m, StreamWriter file, Type t)
 		{
+            bool custom = isCustomMethod(m) && !isStaticCustomMethod(m);
 			bool hasref = false;
 			ParameterInfo[] pars = m.GetParameters();
 			
@@ -1666,19 +1861,24 @@ namespace SLua
 				WriteCheckSelf(file, t);
 				argIndex++;
 			}
+            else if (custom)
+            {
+                WriteCheckSelf(file, pars[0].ParameterType);
+                argIndex++;
+            }
 
 			
-			for (int n = 0; n < pars.Length; n++)
+			for (int n = (!custom ? 0 : 1); n < pars.Length; n++)
 			{
 				ParameterInfo p = pars[n];
 				string pn = p.ParameterType.Name;
-				if (pn.EndsWith("&"))
+				if (pn.EndsWith("&") || custom)
 				{
 					hasref = true;
 				}
 				
 				bool hasParams = p.GetCustomAttributes(typeof(ParamArrayAttribute), false).Length > 0;
-				CheckArgument(file, p.ParameterType, n, argIndex, p, hasParams);
+                CheckArgument(file, p.ParameterType, (!custom ? n : n-1), argIndex, p, hasParams);
 			}
 			
 			string ret = "";
@@ -1712,7 +1912,7 @@ namespace SLua
 				else if (m.Name == "op_GreaterThanOrEqual")
 					Write(file, "{0}(a2<=a1);", ret);
 				else
-					Write(file, "{3}{2}.{0}({1});", m.Name, FuncCall(m), TypeDecl(t), ret);
+                    Write(file, "{3}{2}.{0}({1});", m.Name, FuncCall(m), TypeDecl(t), ret);
 			}
 			else
 				Write(file, "{2}self.{0}({1});", m.Name, FuncCall(m), ret);
@@ -1736,7 +1936,7 @@ namespace SLua
 					
 					if (p.ParameterType.IsByRef)
 					{
-						WritePushValue(p.ParameterType, file, string.Format("a{0}", n + 1));
+						WritePushValue(p.ParameterType, file, (n==0 && custom) ? "self" : string.Format("a{0}", n + 1));
 						retcount++;
 					}
 				}
@@ -1918,18 +2118,20 @@ namespace SLua
 		
 		string FuncCall(MethodBase m)
 		{
-			
+            bool custom = isCustomMethod(m) && !isStaticCustomMethod(m);
 			string str = "";
 			ParameterInfo[] pars = m.GetParameters();
 			for (int n = 0; n < pars.Length; n++)
 			{
 				ParameterInfo p = pars[n];
-				if (p.ParameterType.IsByRef && p.IsOut)
-					str += string.Format("out a{0}", n + 1);
-				else if (p.ParameterType.IsByRef)
-					str += string.Format("ref a{0}", n + 1);
-				else
-					str += string.Format("a{0}", n + 1);
+                if (n == 0 && custom)
+                    str += p.ParameterType.IsByRef ? "ref self" : "self";
+                else if (p.ParameterType.IsByRef && p.IsOut)
+                    str += string.Format("out a{0}", !custom ? n + 1 : n);
+                else if (p.ParameterType.IsByRef)
+                    str += string.Format("ref a{0}", !custom ? n + 1 : n);
+                else
+                    str += string.Format("a{0}", !custom ? n + 1 : n);
 				if (n < pars.Length - 1)
 					str += ",";
 			}

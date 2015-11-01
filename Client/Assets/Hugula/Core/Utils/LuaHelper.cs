@@ -130,16 +130,22 @@ public class  LuaHelper {
     /// <returns></returns>
     public static System.Type GetType(string classname)
     {
-        if (string.IsNullOrEmpty(classname)) return null;
+        if (string.IsNullOrEmpty(classname))
+            return null;
 
-        System.Type t = null;
-        Assembly[] assbs = System.AppDomain.CurrentDomain.GetAssemblies();
-        Assembly assb = null;
+        System.Reflection.Assembly[] assbs = System.AppDomain.CurrentDomain.GetAssemblies();
+        System.Reflection.Assembly assb = null;
         for (int i = 0; i < assbs.Length; i++)
         {
             assb = assbs[i];
-            t = assb.GetType(classname);
-            if (t != null) return t;
+            System.Type tc = assb.GetType(classname);
+            if (tc != null) return tc;
+            System.Type[] types = assb.GetExportedTypes();
+            foreach (System.Type t in types)
+            {
+                if (t.Name.Equals(classname))
+                    return t;
+            }
         }
 
         return null;

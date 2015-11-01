@@ -49,5 +49,10 @@ public  class Common
     /// </summary>
     public const string LANGUAGE_SUFFIX = "lan";
 
+    /// <summary>
+    /// Lua包名
+    /// </summary>
+    public const string LUA_PACKAGE = "luas.u3d";
+
 }
 

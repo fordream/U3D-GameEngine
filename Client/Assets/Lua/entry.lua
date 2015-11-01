@@ -4,7 +4,7 @@ local function createUIRoot()
 	print("create uiroot")
 	local uiRoot = GameObject("Canvas(UIRoot)");
     uiRoot.layer = UnityEngine.LayerMask.NameToLayer("UI");
-    local canvas = uiRoot:AddComponent(Canvas);
+    local canvas = uiRoot:AddComponent("Canvas");
     canvas.renderMode = UnityEngine.RenderMode.ScreenSpaceOverlay;
 
     uiRoot:AddComponent(UI.CanvasScaler);
@@ -22,7 +22,6 @@ end
 
 local function loadRes(url,cb)
 	local c = coroutine.create(function()
-        print("loadRes url=",url)
         local www = WWW(url)
         Yield(www)
         local noerror = not www.error or #(www.error) == 0
@@ -30,6 +29,8 @@ local function loadRes(url,cb)
         if success then
         	if cb then cb(www.assetBundle:LoadAllAssets()[1]) end
         	www.assetBundle:Unload(false)
+        else
+            warn(("loadRes url:=%s,error:=%s"):format(url,www.error))
         end
 
         www:Dispose()
@@ -53,7 +54,7 @@ local function main()
 	local url = CUtils.GetAssetFullPath("UILogin.u3d")
 
 	loadRes(url,function (obj)
-		local loginView = LuaHelper.Instantiate(obj)--Object.Instantiate("UILogin")
+		local loginView = obj:Instantiate("UILogin") --LuaHelper.Instantiate(obj)
     	loginView:SetActive(true)
     	loginView.name = "UILogin"
 

@@ -95,7 +95,7 @@ public class PLua : MonoBehaviour
     private IEnumerator loadLuaBundle(bool domain,LuaFunction onLoadedFn)
     {
         string keyName = "";
-        string luaP = CUtils.GetAssetFullPath("font.u3d");
+        string luaP = CUtils.GetAssetFullPath(Common.LUA_PACKAGE);
         WWW luaLoader = new WWW(luaP);
         yield return luaLoader;
         if (luaLoader.error == null)

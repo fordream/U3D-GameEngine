@@ -141,7 +141,7 @@ public class ExportResources{
 
 		//Encrypt
 		string tarName = Application.dataPath + OutLuaPath + "luaout.bytes";
-		string realOutPath=ExportAssetBundles.GetOutPath()+"/font.u3d";
+        string realOutPath = ExportAssetBundles.GetOutPath() + "/" + Common.LUA_PACKAGE;
 		byte[] by = File.ReadAllBytes (tarName);
 		byte[] Encrypt = CryptographHelper.Encrypt (by, GetKey (), GetIV());
 		File.WriteAllBytes (realOutPath,Encrypt);
@@ -207,6 +207,12 @@ public class ExportResources{
         autoVerAdd();
 
 	}
+
+    public static void clearAll()
+    {
+        DirectoryDelete(Application.dataPath + OutLuaPath);
+        AssetDatabase.Refresh();
+    }
 	
 	#endregion
 	
