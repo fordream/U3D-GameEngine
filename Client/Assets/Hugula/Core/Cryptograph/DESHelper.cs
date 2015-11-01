@@ -19,14 +19,20 @@ public class DESHelper : MonoBehaviour {
 	public byte[] Key
 	{
 		get{
-			return KEYData.KEY;
+            if (null != KEYData)
+                return KEYData.KEY;
+            else
+                return null;
 		}
 	}
 
 	public byte[] IV
 	{
 		get{
-			return IVData.IV;
+            if (null != IVData)
+                return IVData.IV;
+            else
+                return null;
 		}
 	}
 

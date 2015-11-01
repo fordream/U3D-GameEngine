@@ -100,7 +100,11 @@ public class PLua : MonoBehaviour
         yield return luaLoader;
         if (luaLoader.error == null)
         {
-			byte[] byts=CryptographHelper.Decrypt(luaLoader.bytes,DESHelper.instance.Key,DESHelper.instance.IV);
+            byte[] byts;
+            if (DESHelper.instance != null)
+                byts = CryptographHelper.Decrypt(luaLoader.bytes, DESHelper.instance.Key, DESHelper.instance.IV);
+            else
+                byts = luaLoader.bytes;
 			AssetBundle item = AssetBundle.CreateFromMemoryImmediate(byts);
 
             TextAsset[] all = item.LoadAllAssets<TextAsset>();

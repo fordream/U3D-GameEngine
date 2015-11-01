@@ -28,10 +28,6 @@ local function loadRes(url,cb)
         local noerror = not www.error or #(www.error) == 0
 		local success = www.isDone and noerror
         if success then
-            warn(www.assetBundle:GetAllAssetNames())
-            for k,v in pairs(www.assetBundle:GetAllAssetNames()) do
-                print(k,v)
-            end
         	if cb then cb(www.assetBundle:LoadAllAssets()[1]) end
         	www.assetBundle:Unload(false)
         end
