@@ -62,7 +62,7 @@ namespace SLua
             if (null != t)
                 return self.AddComponent(t);
             return null;
-        }        
+        }
     }
 
     public class CustomMethod_UnityEngineObject

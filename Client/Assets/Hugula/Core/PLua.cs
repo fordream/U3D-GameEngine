@@ -46,6 +46,7 @@ public class PLua : MonoBehaviour
 
     void Awake()
     {
+        Wenzil.Console.Console.RegisterLogCallback();
         DontDestroyOnLoad(this.gameObject);
         luacache = new Dictionary<string, TextAsset>();
         lua = new Lua();
@@ -71,6 +72,7 @@ public class PLua : MonoBehaviour
         lua = null;
         _instance = null;
         luacache.Clear();
+        Wenzil.Console.Console.UnRegisterLogCallback();
     }
 
     #endregion

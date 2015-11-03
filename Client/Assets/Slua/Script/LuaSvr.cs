@@ -145,6 +145,7 @@ namespace SLua
 			Helper.reg(L);
 			LuaValueType.reg(L);
 			SLuaDebug.reg(L);
+            LuaModule.reg(L);
 			LuaDLL.luaS_openextlibs(L);
 			Lua3rdDLL.open(L);
 
