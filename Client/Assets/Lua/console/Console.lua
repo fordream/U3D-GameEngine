@@ -12,7 +12,7 @@ local function Execute(cmd,args)
 	if Commands[cmd] ~= nil then
 		Commands[cmd]:execute(args)
 	else
-
+		UnityEngine.Debug.Log("Command <color=red>" .. cmd .. "</color> not found.")
 	end
 end
 
