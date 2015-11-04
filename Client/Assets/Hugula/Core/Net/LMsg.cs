@@ -6,34 +6,37 @@ using System.IO;
 using System;
 using System.Text;
 [SLua.CustomLuaClass]
-public class Msg  {
+public class LMsg  
+{
 
-	public Msg()
+	public LMsg()
 	{
-		buff=new MemoryStream();
-		br=new BinaryReader(buff);
+		buff = new MemoryStream();
+		br = new BinaryReader(buff);
 	}
 
-    public Msg(byte[] bytes)
+    public LMsg(byte[] bytes)
 	{
-		buff=new MemoryStream(bytes);
-		br=new BinaryReader(buff);
-		this.Type=ReadShort();
+		buff =new MemoryStream(bytes);
+		br = new BinaryReader(buff);
 	}
 	
 	public long Length
 	{
-		get{
+		get
+        {
 			return buff.Length;
 		}
 	}
 	
 	public long Position
 	{
-		get{
-		return buff.Position;
+		get
+        {
+		    return buff.Position;
 		}
-		set{
+		set
+        {
 			buff.Position=value;
 		}
 	}
@@ -55,17 +58,6 @@ public class Msg  {
 		}
         return bstr;
 	}
-
-    public static string Debug(byte[] bts)
-    {
-        string bstr = "";
-
-        foreach (byte i in bts)
-        {
-            bstr += " " + i + " ";
-        }
-        return bstr;
-    }
 	
 	/// <summary>
 	/// our message pro
@@ -75,30 +67,74 @@ public class Msg  {
 	/// </returns>
 	public byte[] ToCArray()
 	{
-		byte[] date=ToArray();
-		
-		short len=(short)(date.Length+2);//date[].length+type(short)
+		byte[] data = ToArray();
+
+        short len = (short)(data.Length + 2);//date[].length+type(short)
 		short type=(short)this.Type;
 
 		byte[] lenBytes = BitConverter.GetBytes(len);// date.length
 		System.Array.Reverse(lenBytes);
 
-		byte[] typeBytes=BitConverter.GetBytes(type);//tyep bytes
+		byte[] typeBytes = BitConverter.GetBytes(type);//tyep bytes
 		System.Array.Reverse(typeBytes);
-		
-		int allLen=lenBytes.Length+typeBytes.Length+date.Length;
-		byte[] send=new byte[allLen];
+
+        int allLen = lenBytes.Length + typeBytes.Length + data.Length;
+		byte[] send = new byte[allLen];
 		
 		lenBytes.CopyTo(send,0);//len
 		typeBytes.CopyTo(send,lenBytes.Length);//type
-		date.CopyTo(send,lenBytes.Length+typeBytes.Length);
+        data.CopyTo(send, lenBytes.Length + typeBytes.Length);
 		
 		return send;
 	}
+
+    public static LMsg FromCArray(byte[] buf)
+    {
+        try
+        {
+            MemoryStream stream = new MemoryStream(buf);
+
+            byte[] dataHeader = new byte[2];
+            stream.Read(dataHeader, 0, 2);
+            Array.Reverse(dataHeader);
+            ushort datalen = BitConverter.ToUInt16(dataHeader, 0);
+            byte[] typeHeader = new byte[2];
+            stream.Read(typeHeader, 0, 2);
+            Array.Reverse(typeHeader);
+            ushort type = BitConverter.ToUInt16(typeHeader, 0);
+
+            if (datalen > 0)
+            {
+                byte[] message = new byte[datalen];
+                stream.Read(message, 0, message.Length);
+
+                byte[] lenBytes = BitConverter.GetBytes(datalen);// date.length
+                System.Array.Reverse(lenBytes);
+
+                byte[] data = new byte[datalen + lenBytes.Length];
+                lenBytes.CopyTo(data, 0);//len
+
+                message.CopyTo(data, lenBytes.Length);
+                LMsg msg = new LMsg(data);
+                msg.Type = type;
+
+                string s = msg.ReadString();
+
+                return msg;
+            }
+
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 	
 	public int Type
 	{
-		get{
+		get
+        {
 			return _type;	
 		}
 		set
@@ -108,74 +144,79 @@ public class Msg  {
 	}
 	
 	#region write
-	
+    public void Write(byte value)
+    {
+        buff.WriteByte(value);
+    }
 	public void Write(byte[] value)
 	{
 		buff.Write(value,0,value.Length);
 	}
 	
-	public void WriteBoolean(bool value)
+	public void Write(bool value)
 	{
-		buff.WriteByte  (value ? ((byte)1) : ((byte)0));
+		buff.WriteByte(value ? ((byte)1) : ((byte)0));
 	}
-	
-	public void WriteByte(byte value)
-	{
-		buff.WriteByte(value);
-	}
-	
-	public void WriteChar(char value)
+
+    public void Write(char value)
 	{
 		byte b= Convert.ToByte(value);
-		buff.WriteByte(b);
+        Write(b);
 	}
 	
-	public void WriteUShort(ushort value)
+	public void Write(ushort value)
 	{
 		byte[] bytes =BitConverter.GetBytes(value);
 		WriteBigEndian(bytes);
 	}
-	
-	public void WriteUInt(uint value)
+    public void Write(short value)
+    {
+        byte[] bytes = BitConverter.GetBytes(value);
+        WriteBigEndian(bytes);
+    }
+
+	public void Write(uint value)
 	{
 		byte[] bytes =BitConverter.GetBytes(value);
 		WriteBigEndian(bytes);
 	}
+    public void Write(int value)
+    {
+        byte[] bytes = BitConverter.GetBytes(value);
+        WriteBigEndian(bytes);
+    }
 	
-	public void WriteULong(ulong value)
+	public void Write(ulong value)
 	{
 		byte[] bytes =BitConverter.GetBytes(value);
 		WriteBigEndian(bytes);
 	}
+    public void Write(long value)
+    {
+        byte[] bytes = BitConverter.GetBytes(value);
+        WriteBigEndian(bytes);
+    }
 	
-	public void WriteShort(int value)
-	{
-		byte[] bytes = BitConverter.GetBytes((short)value);
-		WriteBigEndian(bytes);
-	}
-	
-    public void WriteFloat(float value)
+    public void Write(float value)
 	{
 		byte[] bytes = BitConverter.GetBytes(value);			
 		WriteBigEndian(bytes);
 	}
-	
-	public void WriteInt(int value)
-	{
-//		Debug.Log("writeInt                         ::::::::::::"+value);
-		byte[] bytes = BitConverter.GetBytes(value);
-		WriteBigEndian(bytes);
-	}
-	
-	public void WriteString(string value)
-	{
-		UTF8Encoding utf8Encoding = new UTF8Encoding();
-        int byteCount = utf8Encoding.GetByteCount(value);
+    public void Write(double value)
+    {
+        byte[] bytes = BitConverter.GetBytes(value);
+        WriteBigEndian(bytes);
+    }
+
+    public void Write(string value)
+    {
+        UTF8Encoding utf8Encoding = new UTF8Encoding();
+        short byteCount = (short)utf8Encoding.GetByteCount(value);
         byte[] buffer = utf8Encoding.GetBytes(value);
-		this.WriteShort(byteCount);
-		if (buffer.Length > 0)
-			Write(buffer);
-	}
+        Write(byteCount);
+        if (buffer.Length > 0)
+            Write(buffer);
+    }
 	
 	public void WriteUTFBytes(string value)
 	{

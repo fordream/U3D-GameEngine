@@ -68,8 +68,7 @@ public class TcpServer : MonoBehaviour
 
     //void OnEnable()
     //{
-
-
+    
     //}
 
     /// <summary>
@@ -125,7 +124,7 @@ public class TcpServer : MonoBehaviour
                         {
                              byte[] send = new byte[msg.Length -2];
                              System.Array.Copy(msg, 2, send, 0, send.Length);
-                             onMessageArriveFn.call(ses, new Msg(send));
+                             onMessageArriveFn.call(ses, new LMsg(send));
                         }
                         catch (Exception ex)
                         {
@@ -182,7 +181,7 @@ public class TcpServer : MonoBehaviour
         }
     }
 
-    public void BroadCast(Msg msg)
+    public void BroadCast(LMsg msg)
     {
         foreach (var client in sessions.Values)
         {
@@ -315,7 +314,6 @@ public class TcpServer : MonoBehaviour
             newClients.Add(ses);
             Debug.Log("new client" + client.GetHashCode() + " ManagedThreadId " + System.Threading.Thread.CurrentThread.ManagedThreadId);
 
-            ses.Send(Convert.FromBase64String("Hello"));
         }
         server.BeginAcceptTcpClient(DoAcceptTcpClientCallback, server); //开始监听
     }

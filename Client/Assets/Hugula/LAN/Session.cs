@@ -44,7 +44,7 @@ public class Session  {
             stream.BeginWrite(bytes, 0, bytes.Length, new AsyncCallback(SendCallback), stream);
     }
 
-    public void Send(Msg msg)
+    public void Send(LMsg msg)
     {
         if (client != null && client.Connected)
             Send(msg.ToCArray());

@@ -11,15 +11,12 @@ using System.IO;
 /// </summary>
 public class Begin : MonoBehaviour {
 	
-	public bool editorDebug=false;
+	public bool editorDebug = false;
 
     public string enterLua = "main";
 
-    private LHighway multipleLoader;
-
     void Awake()
     {
-        multipleLoader = LHighway.instance;
     }
 
 	// Use this for initialization

@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using System.Threading;
 using SLua;
+
 /// <summary>
 /// 网络连接类
 /// </summary>
@@ -32,6 +33,7 @@ public class LNet : MonoBehaviour, IDisposable
     {
         queue = ArrayList.Synchronized(new ArrayList());
         sendQueue = ArrayList.Synchronized(new ArrayList());
+        DontDestroyOnLoad(gameObject);
     }
 
     void OnApplicationPause(bool pauseStatus)
@@ -117,7 +119,7 @@ public class LNet : MonoBehaviour, IDisposable
                 {
                     object msg = sendQueue[0];
                     sendQueue.RemoveAt(0);
-                    Send((Msg)msg);
+                    Send((LMsg)msg);
                 }
             }
         }
@@ -126,7 +128,6 @@ public class LNet : MonoBehaviour, IDisposable
     void OnDestroy()
     {
         Dispose();
-        //if (_main == this) _main = null;
     }
 
     public void Connect(string host, int port)
@@ -139,12 +140,12 @@ public class LNet : MonoBehaviour, IDisposable
         isConnectioned = false;
         isbegin = true;
         isConnectCall = true;
-        Debug.Log("begin connect:" + host + " :" + port + " time:" + begin.ToString());
         if (client != null)
             client.Close();
         client = new TcpClient();
         client.BeginConnect(host, port, new AsyncCallback(OnConnected), client);
 
+        Debug.Log("begin connect:" + host + " :" + port + " time:" + begin.ToString());
     }
 
     public void ReConnect()
@@ -165,8 +166,8 @@ public class LNet : MonoBehaviour, IDisposable
     {
         if (client.Connected)
             stream.BeginWrite(bytes, 0, bytes.Length, new AsyncCallback(SendCallback), stream);
-        //		else
-        //			this.reConnect();
+        //else
+        //  this.reConnect();
     }
 
     public bool IsConnected
@@ -177,7 +178,7 @@ public class LNet : MonoBehaviour, IDisposable
         }
     }
 
-    public void Send(Msg msg)
+    public void Send(LMsg msg)
     {
         if (client != null && client.Connected)
             Send(msg.ToCArray());
@@ -224,7 +225,7 @@ public class LNet : MonoBehaviour, IDisposable
                 readLen = Convert.ToUInt16(offset + msgLen);
                 if (readLen >= len)//读取完毕
                 {
-                    Msg msg = new Msg(buffer);
+                    LMsg msg = new LMsg(buffer);
                     queue.Add(msg);
                     len = 0;
                 }
@@ -284,13 +285,14 @@ public class LNet : MonoBehaviour, IDisposable
         TimeSpan ts = DateTime.Now - begin;
         stream = client.GetStream();
         breader = new BinaryReader(stream);
-        Debug.Log("Connection success" + Host + " cast" + ts.TotalMilliseconds);
         callConnectioneFun = true;
         isConnectioned = true;
         if (receiveThread != null)
             receiveThread.Abort();
         receiveThread = new Thread(new ThreadStart(Receive));
         receiveThread.Start();
+
+        Debug.Log("Connection success" + Host + " cast" + ts.TotalMilliseconds);
     }
 
     #endregion
@@ -303,11 +305,8 @@ public class LNet : MonoBehaviour, IDisposable
         }
         else
         {
-            var error = new Msg();
-            error.Type = 233;
-            error.WriteString(type);
-            error.WriteString(desc);
-            this.Send(error);
+            //SendError
+            Debug.Log("SendErr:" + type + "," + desc);
         }
     }
 
@@ -345,8 +344,8 @@ public class LNet : MonoBehaviour, IDisposable
     public LuaFunction onIntervalFn;
     #endregion
 
-    private static GameObject lNetObj;
-    private static LNet _main;
+    private static GameObject lNetObj = null;
+    private static LNet _main = null;
 
     public static LNet main
     {
@@ -354,18 +353,18 @@ public class LNet : MonoBehaviour, IDisposable
         {
             if (_main == null)
             {
-                if (lNetObj == null) lNetObj = new GameObject("LNet");
+                if (lNetObj == null) lNetObj = new GameObject("LNetMain");
                 _main = lNetObj.AddComponent<LNet>();
             }
             return _main;
         }
     }
 
-    public static LNet New()
+    public static LNet New(string name)
     {
-        if (lNetObj == null) lNetObj = new GameObject("LNet");
-        var cnet = lNetObj.AddComponent<LNet>();
-        if (_main == null) _main = cnet;
+        GameObject obj = new GameObject(name);
+        LNet cnet = obj.AddComponent<LNet>();
+
         return cnet;
     }
 
